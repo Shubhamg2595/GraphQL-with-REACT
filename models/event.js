@@ -19,11 +19,11 @@ const eventSchema = new Schema({
         type: Date,
         required: true,
     },
+    creator: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }
 })
 
-
-// creating a model based on our event schema, that will be available across all mongoose instances.
-// Model can be considered as a blueprint, which then incoporates that plan to create objects using which we can actually work in our application
-//! model(modelName,schema)
 
 module.exports = mongoose.model('Event',eventSchema);
