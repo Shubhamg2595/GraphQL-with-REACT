@@ -80,17 +80,29 @@ app.use(
                     description: args.eventInput.description,
                     price: +args.eventInput.price,
                     date: new Date(args.eventInput.date),
+                    creator: '5e31b86d55c8fc6ac42227d4'
                 });
+                let createdEvent;
                 return event
                     .save()
                     .then(result => {
-
-                        console.log(result);
-                        return {
+                        createdEvent = {
                             ...result._doc,
-                            _id: result.id
+                            _id: result._doc._id.toString()
                         };
+                        return User.findById('5e31b86d55c8fc6ac42227d4')
 
+
+                    })
+                     .then(user => {
+                        if (!user) {
+                            throw new Error('User not found .');
+                        }
+                        user.createdEvents.push(event);
+                        return user.save();
+                    }).then(result => {
+
+                        return createdEvent
                     })
                     .catch(err => {
                         console.log('[ERROR IN CREATING EVENT]', err);
@@ -114,9 +126,10 @@ app.use(
                     return user.save();
                 }).then(result => {
                     return { ...result._doc, password: null, _id: result.id };
-                }).catch(err => {console.log('ERROR IN hashPassword ::: ', err);
-                throw err;
-            })
+                }).catch(err => {
+                    console.log('ERROR IN hashPassword ::: ', err);
+                    throw err;
+                })
 
 
             }
