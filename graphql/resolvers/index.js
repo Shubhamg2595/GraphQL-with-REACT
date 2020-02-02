@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 
 const Event = require('../../models/event');
 const User = require('../../models/user');
-
+const Booking = require('../../models/booking');
 
 
 
@@ -25,8 +25,23 @@ const events = async eventIds => {
     catch (err) {
         throw err;
     }
+}
 
+// fetching a single event
 
+const singleEvent = async eventId => {
+    try {
+        const event = await Event.findById(eventId);
+        return {
+            ...event._doc,
+            _id: event.id,
+            creator: user.bind(this, event.creator)
+        }
+    }
+    catch (err) {
+        console.log('ERROR IN singleEvent', err);
+        throw err;
+    }
 }
 
 
@@ -44,7 +59,7 @@ const user = async userId => {
     }
 
     catch (err) {
-        console.log(err);
+        console.log('ERROR IN FETCHING USER BY ID ::: ',err);
         throw err;
     };
 }
@@ -69,6 +84,27 @@ module.exports = {
             throw err;
         }
     },
+    bookings: async () => {
+        try {
+            const bookings = await Booking.find();
+            return bookings.map(booking => {
+                console.log('TESTING',booking._doc);
+                return {
+                    ...booking._doc,
+                    _id: booking.id,
+                    user: user.bind(this, booking._doc.user),
+                    event: singleEvent.bind(this, booking._doc.event),
+                    createdAt: new Date(booking._doc.createdAt).toISOString(),
+                    updatedAt: new Date(booking._doc.updatedAt).toISOString()
+                };
+            })
+        }
+        catch (err) {
+            console.log('ERROR IN BOOKINGS QUERY ::: ', err);
+            throw err;
+        }
+    },
+
     createEvent: async (args) => {
         const event = new Event({
             title: args.eventInput.title,
@@ -122,7 +158,31 @@ module.exports = {
             console.log('ERROR IN hashPassword ::: ', err);
             throw err;
         }
+    },
+    bookEvent: async args => {
+        try {
+            const fetchedEvent = await Event.findOne({ _id: args.eventId });
+            const booking = new Booking({
+                user: '5e31b86d55c8fc6ac42227d4',
+                event: fetchedEvent
+            });
 
+            const result = await booking.save();
+            return {
+                ...result._doc,
+                _id: result.id,
+                user: user.bind(this, booking._doc.user),
+                event: singleEvent.bind(this, booking._doc.event),
+                createdAt: new Date(result._doc.createdAt).toISOString(),
+                updatedAt: new Date(result._doc.updatedAt).toISOString()
+            }
+
+
+        }
+        catch (err) {
+            console.log('[ERROR IN BOOKEVENT :::]', err);
+            throw err;
+        }
 
     }
 }
