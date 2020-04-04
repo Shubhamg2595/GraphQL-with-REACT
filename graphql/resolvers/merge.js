@@ -1,6 +1,22 @@
+const DataLoader = require('dataloader');
+
 const Event = require('../../models/event');
 const User = require('../../models/user');
 const { dateToString } = require('../../helpers/date');
+
+
+
+const eventLoader = new DataLoader((eventIds) => {
+    return events(eventIds);
+})
+
+
+const userLoader = new DataLoader(userIds => {
+    return User.find({ _id: { $in: userIds } });
+})
+
+
+
 // fetch events by IDs
 
 const events = async eventIds => {
@@ -21,8 +37,8 @@ const events = async eventIds => {
 
 const singleEvent = async eventId => {
     try {
-        const event = await Event.findById(eventId);
-        return transformEvent(event);
+        const event = await eventLoader.load(eventId.toString())
+        return event;
     }
     catch (err) {
         console.log('ERROR IN singleEvent', err);
@@ -33,18 +49,18 @@ const singleEvent = async eventId => {
 // fetch User BY id
 const user = async userId => {
     try {
-        let user = await User.findById(userId)
+        let user = await userLoader.load(userId.toString());
 
         return user = {
             ...user._doc,
             _id: user.id,
-            createdEvents: events.bind(this, user._doc.createdEvents)
+            createdEvents: eventLoader.loadMany.bind(this, user._doc.createdEvents)
         };
 
     }
 
     catch (err) {
-        console.log('ERROR IN FETCHING USER BY ID ::: ',err);
+        console.log('ERROR IN FETCHING USER BY ID ::: ', err);
         throw err;
     };
 }
